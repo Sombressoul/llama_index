@@ -1,10 +1,10 @@
 from typing import (
     Any,
     Callable,
-    Generic,
+    Dict,
     List,
     Optional,
-    TypeVar,
+    Sequence,
     Union,
 )
 
@@ -16,6 +16,10 @@ from llama_index.constants import (
     DEFAULT_TEMPERATURE,
     DEFAULT_CONTEXT_WINDOW,
     DEFAULT_NUM_OUTPUTS,
+)
+from llama_index.llms.base import (
+    llm_chat_callback,
+    llm_completion_callback,
 )
 from llama_index.llms.llm import LLM
 from llama_index.llms.types import (
@@ -31,12 +35,6 @@ from llama_index.llms.types import (
 """
 To implement:
 # --------------------------------------------------------------------------------------------------------------- #
-
-@classmethod
-def class_name(cls) -> str:
-
-@property
-def metadata(self) -> LLMMetadata:
 
 @property
 def _model_kwargs(self) -> Dict[str, Any]:
@@ -369,6 +367,24 @@ class VllmClient(LLM, VllmSamplingParams, VllmBase):
             is_chat_model=self.is_chat_model,
         )
 
+    @property
+    def _model_kwargs_sampling(
+        self,
+    ) -> Dict[str, Any]:
+        keys = VllmSamplingParams.__fields__.keys()
+        vals = [getattr(self, k) for k in keys]
+        return dict(zip(keys, vals))
+
+    @property
+    def _model_kwargs(
+        self,
+    ) -> Dict[str, Any]:
+        ...  # TODO: implementation.
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "vllm_client"
+
     @kwargs_only
     def __init__(
         self,
@@ -384,7 +400,6 @@ class VllmClient(LLM, VllmSamplingParams, VllmBase):
         **kwargs: Any,
     ) -> CompletionResponse:
         ...  # TODO: implementation.
-
         return CompletionResponse(...)
 
     def _stream_complete(self, prompt: str, **kwargs: Any) -> CompletionResponseGen:
@@ -394,6 +409,13 @@ class VllmClient(LLM, VllmSamplingParams, VllmBase):
             ...  # TODO: implementation.
 
         return gen()
+
+    @llm_completion_callback()
+    async def acomplete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
+        ...  # TODO: implementation.
+        return CompletionResponse(...)
+
+    # TODO: BACKBONE: astream_chat, astream_complete, chat, complete, stream_chat, stream_complete
 
 
 class VllmClientOpenAI(VllmClient):
@@ -407,3 +429,16 @@ class VllmClientOpenAI(VllmClient):
     ) -> None:
         super().__init__(legacy_mode, **kwargs)
         pass
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "vllm_client_openai"
+
+    @llm_chat_callback()
+    async def achat(
+        self,
+        messages: Sequence[ChatMessage],
+        **kwargs: Any,
+    ) -> ChatResponse:
+        ...  # TODO: implementation.
+        return ChatResponse(...)
